@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head>
+  <meta charset="utf‑8">
+  <title>Hair Analysis Clinic</title>
+  <link rel="stylesheet" href="style.css">
+</head><body>
+  <h1>Hair Clinic Dashboard</h1>
+  <section id="patient‑list"></section>
+  <button onclick="showAdd()">Add Patient</button>
+  <div id="form" style="display:none">
+    <input id="name" placeholder="Name">
+    <button onclick="add()">Save</button>
+  </div>
+  <div id="visits"></div>
+  <canvas id="chart"></canvas>
+  <button onclick="generatePdf()">Export PDF</button>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+</body></html>

@@ -1,0 +1,25 @@
+{
+  "name": "hair-analysis",
+  "version": "1.0.0",
+  "description": "Hair analysis and patient management system with file-based storage.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "hair",
+    "clinic",
+    "patient",
+    "analysis",
+    "nodejs",
+    "pdf",
+    "chart"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "puppeteer": "^21.3.8"
+  }
+}
