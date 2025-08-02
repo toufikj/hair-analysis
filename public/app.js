@@ -1,56 +1,114 @@
-let current = null
+let current = null, currentPosition = '', currentChart = null;
 
-async function load(){ return fetch('/api/patients').then(r=>r.json()) }
-async function showList(){
-  const list = await load()
-  document.getElementById('patient-list').innerHTML = list.map(p=>
-    `<div onclick="select(${p.id})">${p.name}</div>`).join('')
-}
-function showAdd(){ document.getElementById('form').style.display='block' }
-async function add(){
-  const name = document.getElementById('name').value
-  await fetch('/api/patients',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})})
-  await showList()
-  document.getElementById('form').style.display='none'
+async function fetchAll() { return fetch('/api/patients').then(r => r.json()); }
+async function refreshList() {
+  const list = await fetchAll();
+  document.getElementById('patient-list').innerHTML = list.map(p =>
+    `<div onclick="selectPatient(${p.id})">${p.name} (${p.age}, ${p.gender})</div>`).join('');
 }
 
-async function select(id){
-  current = (await load()).find(p=>p.id==id)
-  renderVisits()
-  renderChart()
+document.getElementById('add-patient-btn').onclick = () => {
+  document.getElementById('form-section').classList.remove('hidden');
+};
+
+document.getElementById('save-patient-btn').onclick = async () => {
+  const p = {
+    name: document.getElementById('name').value,
+    age: document.getElementById('age').value,
+    gender: document.getElementById('gender').value
+  };
+  await fetch('/api/patients', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p) });
+  document.getElementById('form-section').classList.add('hidden');
+  refreshList();
+};
+
+window.selectPatient = async (id) => {
+  current = await fetch(`/api/patients/${id}`).then(r => r.json());
+  document.getElementById('current-name').innerText = `${current.name} (${current.age}, ${current.gender})`;
+  document.getElementById('visit-section').classList.remove('hidden');
+  await populateDevices();
+  renderVisits();
+  renderChart();
+};
+
+document.getElementById('delete-patient-btn').onclick = async () => {
+  if (!confirm('Delete this patient?')) return;
+  await fetch(`/api/patients/${current.id}`, { method:'DELETE' });
+  current = null;
+  document.getElementById('visit-section').classList.add('hidden');
+  refreshList();
+};
+
+document.querySelectorAll('.positions button').forEach(b => {
+  b.onclick = () => currentPosition = b.getAttribute('data-pos');
+});
+
+async function populateDevices() {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const vd = devices.filter(d => d.kind === 'videoinput');
+  document.getElementById('device-select').innerHTML = vd.map(d =>
+    `<option value="${d.deviceId}">${d.label || 'Camera'}</option>`).join('');
 }
 
-function renderVisits(){
-  const html = current.visits.map((v,i)=>
-    `<div>Visit ${i+1} - ${v.ts} - dandruff: ${v.dandruff}</div>`).join('')
-  document.getElementById('visits').innerHTML = html + `<button onclick="addVisit()">Add Visit</button>`
+document.getElementById('start-camera-btn').onclick = async () => {
+  const id = document.getElementById('device-select').value;
+  const stream = await navigator.mediaDevices.getUserMedia({ video:{ deviceId:{ exact:id } } });
+  document.getElementById('video').srcObject = stream;
+  document.getElementById('capture-btn').classList.remove('disabled');
+};
+
+document.getElementById('capture-btn').onclick = () => {
+  if (!currentPosition) return alert('Select a position');
+  const v = document.getElementById('video'), c = document.getElementById('canvas'), p = document.getElementById('photo');
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  p.src = c.toDataURL('image/jpeg');
+  p.setAttribute('data-pos', currentPosition);
+};
+
+document.getElementById('add-visit-btn').onclick = async () => {
+  const dandruff = document.getElementById('dandruff-select').value;
+  const inflammation = document.getElementById('inflammation-select').value;
+  const position = document.getElementById('photo').getAttribute('data-pos');
+  const img = document.getElementById('photo').src;
+  await fetch(`/api/patients/${current.id}/visit`, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body:JSON.stringify({ dandruff, inflammation, position, imageData: img })
+  });
+  current = await fetch(`/api/patients/${current.id}`).then(r => r.json());
+  renderVisits();
+  renderChart();
+};
+
+async function deleteVisit(index) {
+  if (!confirm('Delete this visit?')) return;
+  current = await fetch(`/api/patients/${current.id}/visit/${index}`, { method:'DELETE' }).then(r => fetch(`/api/patients/${current.id}`)).then(r => r.json());
+  renderVisits(); renderChart();
 }
 
-async function addVisit(){
-  // simulate capture: prompt dandruff level
-  const dandruff = prompt('Level low/medium/high')
-  // simulate USB camera by using file input
-  const imageData = ''
-  await fetch(`/api/patients/${current.id}/visit`,{
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({dandruff,imageData})
-  })
-  current = (await load()).find(p=>p.id==current.id)
-  renderVisits()
-  renderChart()
+function renderVisits() {
+  document.getElementById('visits').innerHTML = current.visits.map((v,i) => `
+    <div class="visit-card">
+      <div><strong>Visit ${i+1}</strong> ${new Date(v.ts).toLocaleString()}</div>
+      <div>Pos: ${v.position} | Dandruff: ${v.dandruff} | Inflammation: ${v.inflammation}</div>
+      ${v.imageFile ? `<img src="${v.imageFile}" class="thumb"><br/>
+       <button onclick="deleteVisit(${i})">Delete Visit</button>` : ''}
+    </div>`).join('');
 }
 
-function renderChart(){
-  const ctx = document.getElementById('chart').getContext('2d')
-  const labels = current.visits.map(v=>new Date(v.ts).toLocaleString())
-  const data = current.visits.map(v=>{
-    return {low:1, medium:2, high:3}[v.dandruff]||0
-  })
-  new Chart(ctx,{type:'bar',data:{labels, datasets:[{label:'Dandruff level',data} ] } })
+function renderChart() {
+  const labels = current.visits.map(v => new Date(v.ts).toLocaleString());
+  const data = current.visits.map(v => ({ low:1, medium:2, high:3 })[v.dandruff] || 0);
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (currentChart) currentChart.destroy();
+  currentChart = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ label:'Dandruff', data, backgroundColor:'#27ae60' }] },
+    options:{ scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1, callback: val => ['','Low','Medium','High'][val] } } } }
+  });
 }
 
-function generatePdf(){
-  window.open(`/api/patients/${current.id}/pdf`)
-}
+document.getElementById('pdf-btn').onclick = () => window.open(`/api/patients/${current.id}/pdf`);
+refreshList();
 
-showList()

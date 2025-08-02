@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "name": "Toufik Jamadar",
+    "age": "22",
+    "gender": "male",
+    "id": 1754135149975,
+    "visits": [
+      {
+        "ts": "2025-08-02T11:46:23.260Z",
+        "dandruff": "medium",
+        "inflammation": "moderate",
+        "position": "front",
+        "imageFile": "data/images/1754135149975/visit-1754135183260-front.jpg"
+      },
+      {
+        "ts": "2025-08-02T11:50:36.555Z",
+        "dandruff": "medium",
+        "inflammation": "none",
+        "position": null,
+        "imageFile": null
+      },
+      {
+        "ts": "2025-08-02T11:50:48.230Z",
+        "dandruff": "low",
+        "inflammation": "none",
+        "position": null,
+        "imageFile": null
+      },
+      {
+        "ts": "2025-08-02T11:57:40.194Z",
+        "dandruff": "medium",
+        "inflammation": "mild",
+        "position": "front",
+        "imageFile": "data/images/1754135149975/visit-1754135860194-front.jpg"
+      }
+    ]
+  }
+]

@@ -1,19 +1,72 @@
 <!DOCTYPE html>
-<html><head>
-  <meta charset="utf‑8">
-  <title>Hair Analysis Clinic</title>
-  <link rel="stylesheet" href="style.css">
-</head><body>
-  <h1>Hair Clinic Dashboard</h1>
-  <section id="patient‑list"></section>
-  <button onclick="showAdd()">Add Patient</button>
-  <div id="form" style="display:none">
-    <input id="name" placeholder="Name">
-    <button onclick="add()">Save</button>
-  </div>
-  <div id="visits"></div>
-  <canvas id="chart"></canvas>
-  <button onclick="generatePdf()">Export PDF</button>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><title>Hair Clinic System</title>
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <h2>Patients</h2>
+      <div id="patient-list"></div>
+      <button id="add-patient-btn">+ New Patient</button>
+    </aside>
+    <main class="main">
+      <section id="form-section" class="hidden">
+        <input id="name" placeholder="Name" />
+        <input id="age" placeholder="Age" />
+        <input id="gender" placeholder="Gender" />
+        <button id="save-patient-btn">Save</button>
+      </section>
+
+      <section id="visit-section" class="hidden">
+        <h2 id="current-name"></h2>
+        <div class="metrics">
+          <label>Inflammation:</label>
+          <select id="inflammation-select">
+            <option value="none">None</option>
+            <option value="mild">Mild</option>
+            <option value="moderate">Moderate</option>
+            <option value="severe">Severe</option>
+          </select>
+        </div>
+
+        <div class="positions">
+          <label>Position:</label>
+          <button data-pos="front">Front</button>
+          <button data-pos="left">Left</button>
+          <button data-pos="right">Right</button>
+          <button data-pos="top">Top</button>
+        </div>
+
+        <div class="camera">
+          <select id="device-select"></select>
+          <video id="video" autoplay></video>
+          <canvas id="canvas" hidden></canvas>
+          <img id="photo" alt="Captured" />
+          <button id="start-camera-btn">Start Camera</button>
+          <button id="capture-btn" class="disabled">Capture</button>
+        </div>
+
+        <div class="controls">
+          <label>Dandruff:</label>
+          <select id="dandruff-select">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+          <button id="add-visit-btn">Add Visit</button>
+        </div>
+
+        <div id="visits"></div>
+        <canvas id="chart"></canvas>
+        <button id="pdf-btn">Export PDF</button>
+        <button id="delete-patient-btn">Delete Patient</button>
+      </section>
+    </main>
+  </div>
   <script src="app.js"></script>
-</body></html>
+</body>
+</html>
+
